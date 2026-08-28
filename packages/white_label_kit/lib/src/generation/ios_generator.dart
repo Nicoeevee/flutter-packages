@@ -232,8 +232,15 @@ def sync_config(config_list, base_name, new_name, bundle_id, app_name = nil)
     config = config_list.project.new(Xcodeproj::Project::Object::XCBuildConfiguration)
     config.name = new_name
     config.build_settings = base.build_settings.dup
+    # Keep Flutter's xcconfig inheritance when cloning a configuration. This
+    # carries Generated.xcconfig (including FLUTTER_BUILD_NAME/NUMBER) into
+    # tenant configurations instead of leaving Info.plist substitutions
+    # unresolved.
+    config.base_configuration_reference = base.base_configuration_reference
     config_list.build_configurations << config
   end
+  base = config_list.build_configurations.find { |c| c.name == base_name }
+  config.base_configuration_reference = base.base_configuration_reference if base
   config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = bundle_id if bundle_id
   # A stock `flutter create` Info.plist already reads CFBundleDisplayName/
   # CFBundleName from $(APP_DISPLAY_NAME) — setting this build setting is
