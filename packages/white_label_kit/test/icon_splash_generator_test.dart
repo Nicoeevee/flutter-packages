@@ -83,6 +83,45 @@ void main() {
       },
     );
 
+    test('uses configured adaptive icon layers when creating the config', () {
+      final TenantConfig tenant = WhiteLabelConfig.parse('''
+white_label:
+  default_tenant: acme
+  tenants:
+    acme:
+      name: Acme
+      android:
+        application_id: com.example.acme
+        adaptive_icon:
+          foreground: tenants/acme/adaptive_foreground.png
+          background_color: "#123456"
+          monochrome: tenants/acme/monochrome.png
+      ios:
+        bundle_id: com.example.acme
+      assets:
+        logo: tenants/acme/logo.png
+      features:
+        icon_generate: true
+''').resolve();
+
+      maybeGenerateLauncherIcon(tenant, projectRoot: projectRoot.path);
+
+      final String content = File(
+        p.join(projectRoot.path, 'icons_launcher-acme.yaml'),
+      ).readAsStringSync();
+      expect(
+        content,
+        contains(
+          'adaptive_foreground_image: "tenants/acme/adaptive_foreground.png"',
+        ),
+      );
+      expect(content, contains('adaptive_background_color: "#123456"'));
+      expect(
+        content,
+        contains('adaptive_monochrome_image: "tenants/acme/monochrome.png"'),
+      );
+    });
+
     test('when opted in, never overwrites an already-existing hand-authored '
         'config file', () {
       final configFile = File(
