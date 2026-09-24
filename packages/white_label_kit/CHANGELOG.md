@@ -1,4 +1,4 @@
-## 0.0.7
+## 0.1.0
 
 * Added optional per-tenant Android adaptive icon foreground, background
   color, and monochrome image configuration.
