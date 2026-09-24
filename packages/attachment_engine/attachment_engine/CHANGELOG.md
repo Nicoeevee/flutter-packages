@@ -1,3 +1,31 @@
+## 0.0.1-dev.5
+
+* Fix: `VideoAttachmentRenderer` never rendered anything for a failed load —
+  `NativePlaybackState.error` was defined but unhandled, so a failure fell
+  through to the "assume playable" branch and looked like a video stuck on
+  an infinite loading spinner with no way to recover. Added an explicit
+  error branch (message + Retry, which reloads the same source).
+* Fix: `AudioAttachmentRenderer` had a seek bar and play/pause button but no
+  position/duration readout and no volume control, even though
+  `NativeAudioController.setVolume()` already existed and was wired to the
+  platform channel. Added both, plus the same explicit error-state handling
+  as the video renderer.
+
+## 0.0.1-dev.4
+
+* `TextAttachmentRenderer.showSearch` now defaults to `false` (was `true`).
+  The in-file search bar remains available by opting in explicitly; the
+  plain scrollable text view is now the out-of-the-box behavior.
+
+## 0.0.1-dev.3
+
+* New `OfficeAttachmentRenderer.onDismissed` callback, invoked once the
+  user dismisses the iOS QuickLook office-document preview. Requires
+  `attachment_engine_ios` 0.0.1-dev.2+, whose `openOfficePreview` now
+  resolves only on the modal's actual dismissal rather than as soon as it
+  is presented — previously there was no signal at all for a host app to
+  react to the close (e.g. to pop the screen left behind it).
+
 ## 0.0.1-dev.2
 
 * New "keep available offline" pinning: `AttachmentManager.pinForOffline(attachment)`
