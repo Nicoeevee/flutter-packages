@@ -24,6 +24,8 @@ void main() {
     File(p.join(projectRoot.path, 'tenants/acme/logo.png'))
       ..createSync(recursive: true)
       ..writeAsBytesSync([1, 2, 3]);
+    File(p.join(projectRoot.path, 'tenants/acme/icon.png'))
+      ..writeAsBytesSync([1, 2, 3]);
   });
 
   tearDown(() => projectRoot.deleteSync(recursive: true));
@@ -47,7 +49,10 @@ void main() {
       appName: 'Acme',
     ),
     ios: IosTenantConfig(bundleId: 'com.example.acme', appName: 'Acme'),
-    assets: TenantAssets(logo: 'tenants/acme/logo.png'),
+    assets: TenantAssets(
+      logo: 'tenants/acme/logo.png',
+      icon: 'tenants/acme/icon.png',
+    ),
     features: {'icon_generate': true, 'splash_generate': true},
   );
 
@@ -65,7 +70,7 @@ void main() {
     });
 
     test(
-      'when opted in, auto-creates the config from assets.logo if missing',
+      'when opted in, auto-creates a regular icon config from assets.icon',
       () {
         maybeGenerateLauncherIcon(tenantOptedIn, projectRoot: projectRoot.path);
 
@@ -74,53 +79,11 @@ void main() {
         );
         expect(configFile.existsSync(), isTrue);
         final content = configFile.readAsStringSync();
-        expect(content, contains('image_path: "tenants/acme/logo.png"'));
-        expect(
-          content,
-          contains('adaptive_foreground_image: "tenants/acme/logo.png"'),
-        );
-        expect(content, contains('adaptive_background_color: "#ffffff"'));
+        expect(content, contains('image_path: "tenants/acme/icon.png"'));
+        expect(content, isNot(contains('adaptive_background_color')));
+        expect(content, isNot(contains('adaptive_foreground_image')));
       },
     );
-
-    test('uses configured adaptive icon layers when creating the config', () {
-      final TenantConfig tenant = WhiteLabelConfig.parse('''
-white_label:
-  default_tenant: acme
-  tenants:
-    acme:
-      name: Acme
-      android:
-        application_id: com.example.acme
-        adaptive_icon:
-          foreground: tenants/acme/adaptive_foreground.png
-          background_color: "#123456"
-          monochrome: tenants/acme/monochrome.png
-      ios:
-        bundle_id: com.example.acme
-      assets:
-        logo: tenants/acme/logo.png
-      features:
-        icon_generate: true
-''').resolve();
-
-      maybeGenerateLauncherIcon(tenant, projectRoot: projectRoot.path);
-
-      final String content = File(
-        p.join(projectRoot.path, 'icons_launcher-acme.yaml'),
-      ).readAsStringSync();
-      expect(
-        content,
-        contains(
-          'adaptive_foreground_image: "tenants/acme/adaptive_foreground.png"',
-        ),
-      );
-      expect(content, contains('adaptive_background_color: "#123456"'));
-      expect(
-        content,
-        contains('adaptive_monochrome_image: "tenants/acme/monochrome.png"'),
-      );
-    });
 
     test('when opted in, never overwrites an already-existing hand-authored '
         'config file', () {

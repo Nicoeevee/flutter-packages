@@ -73,7 +73,7 @@ class TenantStager {
   /// output for this tenant.
   String stage(TenantConfig tenant) {
     final groups = <_StageGroup>[
-      _StageGroup('assets', tenant.allAssetPaths.toList()),
+      _StageGroup('assets', tenant.assets.all.toList()),
       if (tenant.firebase != null)
         _StageGroup('firebase', tenant.firebase!.all.toList()),
     ];

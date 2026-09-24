@@ -1,3 +1,8 @@
+## 0.1.1
+
+* Generated launcher configs now use the tenant icon as a regular image and
+  no longer configure Android adaptive icon layers.
+
 ## 0.1.0
 
 * Added optional per-tenant Android adaptive icon foreground, background

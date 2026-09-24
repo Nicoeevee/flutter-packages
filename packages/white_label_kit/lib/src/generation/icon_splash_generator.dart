@@ -32,18 +32,10 @@ class IconSplashGenerateResult {
 ///
 /// If opted in and `icons_launcher-<tenant.id>.yaml` does **not** already
 /// exist, one is auto-created from the tenant's `assets.icon` (falling
-/// back to `assets.logo`) and optional Android adaptive icon config. An
-/// existing config (hand-authored or from a previous run) is left exactly
-/// as-is — this never overwrites a tenant's own icon config, unlike
-/// `configure`'s other generated files.
-///
-/// The auto-created config also declares an **adaptive icon** (Android
-/// 8.0+/API 26 — see
-/// https://developer.android.com/develop/ui/views/launch/icon_design_adaptive),
-/// not just the legacy flat `mipmap/ic_launcher.png`:
-/// `adaptive_foreground_image` uses `android.adaptive_icon.foreground` when
-/// set, otherwise it reuses the regular icon. Background color uses the
-/// configured adaptive color, then `theme.primary_color`, then white.
+/// back to `assets.logo`) as a regular launcher image. An existing config
+/// (hand-authored or from a previous run) is left exactly as-is — this never
+/// overwrites a tenant's own icon config, unlike `configure`'s other
+/// generated files.
 ///
 /// **Never throws.** A command that fails to run (e.g. `icons_launcher`
 /// isn't a dev dependency of the host app) is reported via
@@ -62,11 +54,6 @@ IconSplashGenerateResult? maybeGenerateLauncherIcon(
     // itself proves iconPath can never be null (and so never end up as the
     // literal string "null" here), not just convention.
     final String iconPath = tenant.assets.icon ?? tenant.assets.logo;
-    final AndroidAdaptiveIconConfig? adaptiveIcon = tenant.android.adaptiveIcon;
-    final String foregroundPath = adaptiveIcon?.foreground ?? iconPath;
-    final String backgroundColor =
-        adaptiveIcon?.backgroundColor ?? tenant.theme.primaryColor ?? '#ffffff';
-    final String? monochromePath = adaptiveIcon?.monochrome;
     configFile.writeAsStringSync('''
 icons_launcher:
   image_path: "$iconPath"
@@ -74,9 +61,6 @@ icons_launcher:
     android:
       enable: true
       notification_image: "$iconPath"
-      adaptive_background_color: "$backgroundColor"
-      adaptive_foreground_image: "$foregroundPath"
-${monochromePath == null ? '' : '      adaptive_monochrome_image: "$monochromePath"\n'}
     ios:
       enable: true
       image_path: "$iconPath"

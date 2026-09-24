@@ -247,44 +247,6 @@ class WhiteLabelConfig {
       }
     }
 
-    AndroidAdaptiveIconConfig? adaptiveIcon;
-    final dynamic adaptiveIconNode = android?['adaptive_icon'];
-    if (adaptiveIconNode != null) {
-      final Map<dynamic, dynamic>? adaptive = ConfigValidator.expectMap(
-        adaptiveIconNode,
-        'tenants.$id.android.adaptive_icon',
-        errors,
-      );
-      final String? foreground = adaptive?['foreground']?.toString();
-      final String? backgroundColor = adaptive?['background_color']?.toString();
-      final String? monochrome = adaptive?['monochrome']?.toString();
-
-      for (final String path in [foreground, monochrome].whereType<String>()) {
-        final ValidationResult result = ConfigValidator.assetPath(
-          path,
-          tenantId: id,
-          projectRoot: projectRoot,
-        );
-        if (result is Invalid) {
-          errors.add('Tenant "$id": ${result.message}');
-        }
-      }
-      if (backgroundColor != null) {
-        final ValidationResult result = ConfigValidator.colorHex(
-          backgroundColor,
-        );
-        if (result is Invalid) {
-          errors.add('Tenant "$id": ${result.message}');
-        }
-      }
-
-      adaptiveIcon = AndroidAdaptiveIconConfig(
-        foreground: foreground,
-        backgroundColor: backgroundColor,
-        monochrome: monochrome,
-      );
-    }
-
     final Map<dynamic, dynamic>? ios = ConfigValidator.expectMap(
       map['ios'],
       'tenants.$id.ios',
@@ -522,7 +484,6 @@ class WhiteLabelConfig {
         applicationId: applicationId,
         appName: androidAppName!,
         version: androidVersionOverride,
-        adaptiveIcon: adaptiveIcon,
       ),
       ios: IosTenantConfig(
         bundleId: bundleId,
