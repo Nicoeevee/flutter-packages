@@ -131,8 +131,23 @@ Both flags are off by default — a tenant that declares neither sees no
 change in behavior at all.
 
 The auto-created `icons_launcher-<id>.yaml` uses `assets.icon` (falling back
-to `assets.logo`) as the regular launcher image. It does not generate an
-Android adaptive icon.
+to `assets.logo`) as the regular launcher image. Without
+`android.adaptive_icon`, it creates a regular launcher icon only. Adaptive
+layers are added only when declared on that tenant:
+
+```yaml
+android:
+  application_id: com.example.acme
+  adaptive_icon:
+    foreground: tenants/acme/adaptive_foreground.png
+    background: tenants/acme/adaptive_background.png
+    monochrome: tenants/acme/adaptive_monochrome.png # optional
+```
+
+Use `background_color` instead of `background` for a flat-color background.
+If `foreground` is omitted, the regular launcher image is used. Layer image
+paths follow the same tenant path validation and staging rules as
+`assets.icon`.
 
 **iOS storyboard registration is automatic — for the opt-in flag only.**
 `flutter_native_splash:create` only writes
@@ -147,9 +162,9 @@ the output, never a crash).
 
 **Manual (full control) — skip the flags:** hand-author
 `icons_launcher-acme.yaml` / `flutter_native_splash-acme.yaml` yourself
-using either package's full config reference (dark-mode variants,
-`fullscreen`, per-platform overrides, and everything else either supports),
-then run:
+using either package's full config reference (adaptive icon
+background/foreground, dark-mode variants, `fullscreen`, per-platform
+overrides, and everything else either supports), then run:
 
 ```bash
 dart run icons_launcher:create --flavor acme

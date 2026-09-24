@@ -32,10 +32,14 @@ class IconSplashGenerateResult {
 ///
 /// If opted in and `icons_launcher-<tenant.id>.yaml` does **not** already
 /// exist, one is auto-created from the tenant's `assets.icon` (falling
-/// back to `assets.logo`) as a regular launcher image. An existing config
-/// (hand-authored or from a previous run) is left exactly as-is — this never
-/// overwrites a tenant's own icon config, unlike `configure`'s other
-/// generated files.
+/// back to `assets.logo`) and optional Android adaptive icon config. An
+/// existing config (hand-authored or from a previous run) is left exactly
+/// as-is — this never overwrites a tenant's own icon config, unlike
+/// `configure`'s other generated files.
+///
+/// The auto-created config adds Android adaptive layers only when
+/// `android.adaptive_icon` is declared. Otherwise Android uses the regular
+/// flat launcher image alone.
 ///
 /// **Never throws.** A command that fails to run (e.g. `icons_launcher`
 /// isn't a dev dependency of the host app) is reported via
@@ -54,13 +58,40 @@ IconSplashGenerateResult? maybeGenerateLauncherIcon(
     // itself proves iconPath can never be null (and so never end up as the
     // literal string "null" here), not just convention.
     final String iconPath = tenant.assets.icon ?? tenant.assets.logo;
+    final AndroidAdaptiveIconConfig? adaptiveIcon = tenant.android.adaptiveIcon;
+    final androidConfigLines = <String>[
+      '    android:',
+      '      enable: true',
+      '      notification_image: "$iconPath"',
+    ];
+    if (adaptiveIcon != null) {
+      androidConfigLines.add(
+        '      adaptive_foreground_image: "${adaptiveIcon.foreground ?? iconPath}"',
+      );
+      if (adaptiveIcon.background case final String background) {
+        androidConfigLines.add(
+          '      adaptive_background_image: "$background"',
+        );
+      } else {
+        final String backgroundColor =
+            adaptiveIcon.backgroundColor ??
+            tenant.theme.primaryColor ??
+            '#ffffff';
+        androidConfigLines.add(
+          '      adaptive_background_color: "$backgroundColor"',
+        );
+      }
+      if (adaptiveIcon.monochrome case final String monochrome) {
+        androidConfigLines.add(
+          '      adaptive_monochrome_image: "$monochrome"',
+        );
+      }
+    }
     configFile.writeAsStringSync('''
 icons_launcher:
   image_path: "$iconPath"
   platforms:
-    android:
-      enable: true
-      notification_image: "$iconPath"
+${androidConfigLines.join('\n')}
     ios:
       enable: true
       image_path: "$iconPath"

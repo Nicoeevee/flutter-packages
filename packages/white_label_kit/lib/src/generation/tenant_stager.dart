@@ -14,10 +14,9 @@ import '../validation/validation_result.dart';
 /// files into a deterministic staging directory
 /// (`<projectRoot>/.generated/<tenantId>/...`) — never the whole `tenants/`
 /// tree, never another tenant's files. Two independent groups of declared
-/// files are staged this way, each into its own subdirectory: the required
-/// [TenantConfig.assets] (`assets/`) and the optional
-/// [TenantConfig.firebase] config files (`firebase/`), if the tenant
-/// declared any.
+/// files are staged this way, each into its own subdirectory: tenant images
+/// (`assets/`), including optional Android adaptive icon layers, and optional
+/// [TenantConfig.firebase] config files (`firebase/`).
 ///
 /// This is the actual isolation mechanism (not a runtime `if`/asset-manifest
 /// trick): whatever consumes the staging directory afterwards (icon
@@ -29,14 +28,14 @@ import '../validation/validation_result.dart';
 /// explicit contracts so a future change can't silently regress them. There
 /// is deliberately only one code path that provides these guarantees
 /// ([_StageGroup] + the loop in [stage]) — Firebase files go through the
-/// exact same validate/collision/atomic-swap logic as assets, not a second,
+/// exact same validate/collision/atomic-swap logic as tenant images, not a second,
 /// weaker copy of it:
 ///
 /// 1. **Path safety is enforced here too, not just at parse time.**
 ///    [TenantConfig] has a public constructor — nothing stops a caller
 ///    (including this package's own `example/` scripts) from building one
 ///    directly instead of going through [ConfigValidator]/`WhiteLabelConfig`.
-///    `stage()` re-validates every declared path itself (assets AND
+///    `stage()` re-validates every declared path itself (tenant images AND
 ///    Firebase files), so it is safe to call on any [TenantConfig]
 ///    regardless of how it was constructed. Relying solely on the parser was
 ///    the bug: it made "paths can't escape the tenant directory" true only
@@ -65,15 +64,14 @@ class TenantStager {
       p.join(projectRoot, '.generated', tenantId);
 
   /// Stages [tenant]. See the class doc for the atomicity/path-safety/
-  /// collision guarantees — they apply identically to
-  /// [TenantConfig.assets] and, when the tenant declares one,
-  /// [TenantConfig.firebase]. Returns the absolute path to the staged
+  /// collision guarantees — they apply identically to every declared tenant
+  /// image and, when declared, [TenantConfig.firebase]. Returns the absolute path to the staged
   /// `assets/` directory. Throws [StateError] (validation failure, missing
   /// file, or basename collision) without touching any previously-staged
   /// output for this tenant.
   String stage(TenantConfig tenant) {
     final groups = <_StageGroup>[
-      _StageGroup('assets', tenant.assets.all.toList()),
+      _StageGroup('assets', tenant.allAssetPaths.toList()),
       if (tenant.firebase != null)
         _StageGroup('firebase', tenant.firebase!.all.toList()),
     ];

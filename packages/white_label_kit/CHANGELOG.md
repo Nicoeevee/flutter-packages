@@ -1,3 +1,9 @@
+## 0.2.0
+
+* Added opt-in per-tenant Android adaptive icon foreground, background image
+  or color, and monochrome configuration. Tenants without this configuration
+  continue to generate regular launcher icons only.
+
 ## 0.1.1
 
 * Generated launcher configs now use the tenant icon as a regular image and
